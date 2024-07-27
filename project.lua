@@ -9,7 +9,6 @@ module.TYPES = {
 
 module.Cache = {}
 
-
 local function filter_debug(name)
     flags{"FatalWarnings"}
     filter "configurations:debug"
@@ -22,7 +21,7 @@ local function filter_debug(name)
     symbols "On"
     
     if os.target() == "windows" then
-        buildoptions { "-Od" } 
+        buildoptions { "/Od" } 
     else
         buildoptions { "-g -O0" }
     end
@@ -58,16 +57,39 @@ local function filter_release(name)
         buildoptions { "-O3", "-flto", "-ftree-vectorize", "-finline-functions" }
         linkoptions { "-flto" }
     end
-
 end
 
 local function set_defines(name)
     if os.target() == "windows" then
         defines { "_WIN32"} 
-    elseif os.target() == "linux" then
+
+        if module.Cache[name].Cpp then
+            compileas "C"
+        else
+            compileas "C++"
+        end
+
+       
+    elseif os.target() == "linux"  then
         defines { "_LINUX", "_UNIX" } 
+
+        if module.Cache[name].Cpp then
+            compileas "C"
+            buildoptions { "-x c" } 
+        else
+            compileas "C++"
+        end
     elseif os.target() == "macosx" then
         defines { "_MACOSX", "_UNIX" } 
+        
+
+        if module.Cache[name].Cpp then
+            compileas "C"
+            buildoptions { "-x c" } 
+        else
+            compileas "C++"
+        end
+        
     end
 end
 
@@ -82,7 +104,6 @@ local function set_common(name)
     filter_debug(name)
     filter_release(name)
 end
-
 
 local function does_exist(name)
     local folders = os.matchdirs(os.getcwd() .. "/*")
@@ -104,7 +125,7 @@ function module.Begin(name, enableCPP, TYPE, showConsole)
     end
 
     if module.Cache[name] then
-        error(name .. " already exist in cache, dublication?")
+        error(name .. " already exist in cache, duplication?")
         return
     end
 
@@ -141,8 +162,6 @@ function module.Begin(name, enableCPP, TYPE, showConsole)
         debugdir(Paths.OsRoot() .. "Applications/" .. name .. "/")
     end
  
- 
-   
     location(name)
 
     files {
@@ -176,6 +195,5 @@ function module.End(name)
 
     set_common(name)
 end
-
 
 return module
