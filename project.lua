@@ -20,6 +20,7 @@ local function get_os_root()
 end
 
 local function filter_debug(name)
+    flags{"FatalWarnings"}
     filter "configurations:debug"
 
     if module.Cache[name].Type == module.TYPES.APP then 
@@ -38,7 +39,14 @@ end
 
 local function filter_release(name) 
     filter "configurations:release"
-
+    flags {
+        "LinkTimeOptimization",
+        "MultiProcessorCompile",
+        "FatalWarnings", 
+        "NoMinimalRebuild", 
+        "NoBufferSecurityCheck", 
+        "NoIncrementalLink" 
+    }
     if module.Cache[name].Type == module.TYPES.APP  then
         if module.Cache[name].Console then
             kind "ConsoleApp"
