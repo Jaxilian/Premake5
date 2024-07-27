@@ -14,7 +14,6 @@ function module.Link()
     
     libdirs { vulkan_sdk .. "/Lib" }
     links { "vulkan-1" }
-
 end
 
 
