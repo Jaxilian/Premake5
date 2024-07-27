@@ -1,3 +1,5 @@
+local Paths = require("paths")
+
 local module = {}
 module.TYPES = {
     APP         = "APP",
@@ -7,17 +9,6 @@ module.TYPES = {
 
 module.Cache = {}
 
-local function get_os_root()
-    local os_target = os.target()
-    
-    if os_target == "windows" then
-        return "C:\\"
-    elseif os_target == "linux" or os_target == "macosx" then
-        return "/"
-    else
-        error("Unsupported OS: " .. os_target)
-    end
-end
 
 local function filter_debug(name)
     flags{"FatalWarnings"}
@@ -132,37 +123,45 @@ function module.Begin(name, enableCPP, TYPE, showConsole)
         language("C")
     end
 
+    objdir(".cache/" .. name .. "/obj/%{cfg.buildcfg}")
+
     if TYPE == module.TYPES.LIB then
         kind("StaticLib")
-        targetdir(get_os_root() .. "Development/static")
+        targetdir(Paths.OsRoot() .. "Development/static/")
     elseif TYPE == module.TYPES.SHARED then
         kind("SharedLib")
-        targetdir(name .. "/bin/%{cfg.buildcfg}")
+        if os.target() == "windows" then
+            targetdir("C:/Windows/System32/")
+        else
+            targetdir("/usr/lib/")
+        end 
     else
-        targetdir(name .. "/bin/%{cfg.buildcfg}")
+        kind "ConsoleApp"
+        targetdir(Paths.OsRoot() .. "Applications/" .. name .. "/")
+        debugdir(Paths.OsRoot() .. "Applications/" .. name .. "/")
     end
-
-    debugdir(name .. "/bin/%{cfg.buildcfg}")
-    targetdir(name .. "/bin/%{cfg.buildcfg}")
-    objdir(name .. "/obj/%{cfg.buildcfg}")
+ 
+ 
+   
     location(name)
 
     files {
-        name .. "/src/**.h", name .. "/src/**.c",
-        name .. "/src/**.hpp", name .. "/src/**.cc",
-        name .. "/src/**.cpp"
+        name .. "/**.h", name .. "/**.c",
+        name .. "/**.hpp", name .. "/**.cc",
+        name .. "/**.cpp"
     }
     includedirs {
-        name .. "/src",
-        get_os_root() .. "Development/include/"
+        name,
+        Paths.OsRoot() .. "Development/include/"
     }
-    libdirs(
-        get_os_root() .. "Development/static"
-    )
+    libdirs {Paths.OsRoot() .. "Development/static/" }  
 end
 
 function module.Link(libName)
     links{libName}
+    includedirs{
+        libName
+    }
 end
 
 function AddDefinition(definition)
