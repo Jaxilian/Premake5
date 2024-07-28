@@ -1,19 +1,19 @@
-local Paths = require("paths")
+local Paths = require("Paths")
 
-local module = {}
-module.TYPES = {
+local Project = {}
+Project.TYPES = {
     APP         = "APP",
     LIB         = "LIB",
     SHARED      = "SHARED"
 }
 
-module.Cache = {}
+Project.Cache = {}
 
 local function filter_debug(name)
     flags{"FatalWarnings"}
     filter "configurations:debug"
 
-    if module.Cache[name].Type == module.TYPES.APP then 
+    if Project.Cache[name].Type == Project.TYPES.APP then 
         kind "ConsoleApp"
     end
 
@@ -37,8 +37,8 @@ local function filter_release(name)
         "NoBufferSecurityCheck", 
         "NoIncrementalLink" 
     }
-    if module.Cache[name].Type == module.TYPES.APP  then
-        if module.Cache[name].Console then
+    if Project.Cache[name].Type == Project.TYPES.APP  then
+        if Project.Cache[name].Console then
             kind "ConsoleApp"
         else
             defines("_CONSOLE_HIDDEN")
@@ -63,7 +63,7 @@ local function set_defines(name)
     if os.target() == "windows" then
         defines { "_WIN32"} 
 
-        if module.Cache[name].Cpp then
+        if Project.Cache[name].Cpp then
             compileas "C"
         else
             compileas "C++"
@@ -73,7 +73,7 @@ local function set_defines(name)
     elseif os.target() == "linux"  then
         defines { "_LINUX", "_UNIX" } 
 
-        if module.Cache[name].Cpp then
+        if Project.Cache[name].Cpp then
             compileas "C"
             buildoptions { "-x c" } 
         else
@@ -83,7 +83,7 @@ local function set_defines(name)
         defines { "_MACOSX", "_UNIX" } 
         
 
-        if module.Cache[name].Cpp then
+        if Project.Cache[name].Cpp then
             compileas "C"
             buildoptions { "-x c" } 
         else
@@ -117,27 +117,28 @@ local function does_exist(name)
     return false
 end
 
-function module.Begin(name, enableCPP, TYPE, showConsole)
+function Project.Begin(name, enableCPP, TYPE, showConsole)
 
     if not does_exist(name) then
         error("project \"" .. name .. "\" does not exist! Directory missing ./"..name)
         return
     end
 
-    if module.Cache[name] then
+    if Project.Cache[name] then
         error(name .. " already exist in cache, duplication?")
         return
     end
 
-    module.Cache[name] = {
+    Project.Cache[name] = {
         Name    = name,
         Cpp     = enableCPP,
         Type    = TYPE,
-        Console = showConsole
+        Console = showConsole,
+        Modules = {}
     }
 
     project(name)
-    
+    architecture ("x86_64")
     if enableCPP then
         language("C++")
     else
@@ -146,10 +147,10 @@ function module.Begin(name, enableCPP, TYPE, showConsole)
 
     objdir(".cache/" .. name .. "/obj/%{cfg.buildcfg}")
 
-    if TYPE == module.TYPES.LIB then
+    if TYPE == Project.TYPES.LIB then
         kind("StaticLib")
         targetdir(Paths.OsRoot() .. "Development/static/")
-    elseif TYPE == module.TYPES.SHARED then
+    elseif TYPE == Project.TYPES.SHARED then
         kind("SharedLib")
         if os.target() == "windows" then
             targetdir("C:/Windows/System32/")
@@ -164,11 +165,6 @@ function module.Begin(name, enableCPP, TYPE, showConsole)
  
     location(name)
 
-    files {
-        name .. "/**.h", name .. "/**.c",
-        name .. "/**.hpp", name .. "/**.cc",
-        name .. "/**.cpp"
-    }
     includedirs {
         name,
         Paths.OsRoot() .. "Development/include/"
@@ -176,19 +172,37 @@ function module.Begin(name, enableCPP, TYPE, showConsole)
     libdirs {Paths.OsRoot() .. "Development/static/" }  
 end
 
-function module.Link(libName)
+function Project.Link(libName)
     links{libName}
     includedirs{
         libName
     }
 end
 
-function AddDefinition(definition)
+function Project.UseModule(name, module_name)
+    table.insert(Project.Cache[name].Modules, module_name)
+
+    files {
+        name .. "/" .. module_name .. "/**.h",
+        name .. "/" .. module_name .. "/**.c"
+    }
+
+    if Project.Cache[name].Cpp then
+        files {
+            name .. "/**.hpp",
+            name .. "/**.cc",
+            name .. "/**.cpp"
+        }
+    end
+end
+
+
+function Project.AddDefinition(definition)
     defines{definition}
 end
 
-function module.End(name)
-    if not module.Cache[name] then
+function Project.End(name)
+    if not Project.Cache[name] then
         error(name .. " project has not been started")
         return
     end
@@ -196,4 +210,4 @@ function module.End(name)
     set_common(name)
 end
 
-return module
+return Project

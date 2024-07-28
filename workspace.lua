@@ -1,12 +1,13 @@
-local module = {}
+local Workspace = {}
 
 
 
-function module.New(start_project)
+function Workspace.New(start_project)
 
     local cwd = os.getcwd()
     local name = path.getname(cwd)
 
+    print("setting up workspace " .. name)
     workspace(name)
     configurations { "debug", "release" }
     startproject(start_project)
@@ -15,6 +16,7 @@ function module.New(start_project)
     filter "action:vs*"
         defines { "VISUAL_STUDIO" }
         buildoptions { "/wd4996" }
+        linkoptions { "/machine:x64" }
 end
 
-return module
+return Workspace

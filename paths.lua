@@ -1,7 +1,7 @@
-local module = {}
+local Paths = {}
 
 
-function module.OsRoot() 
+function Paths.OsRoot() 
     local os_target = os.target()
     
     if os_target == "windows" then
@@ -13,7 +13,7 @@ function module.OsRoot()
     end
 end
 
-function module.Exists(file)
+function Paths.Exists(file)
     local ok, err, code = os.rename(file, file)
     if not ok then
        if code == 13 then
@@ -23,11 +23,11 @@ function module.Exists(file)
     return ok, err
  end
 
-function module.BuildPaths()
-    module.PATH_TO_LIBRARIES        = module.OsRoot() .. "Development/static/"
-    module.PATH_TO_INCLUDES         = module.OsRoot() .. "Development/include/"
-    module.PATH_TO_STATIC_OUTPUT    = module.PATH_TO_LIBRARIES
-    module.USING_TRIGON_STANDARD    = true
+function Paths.BuildPaths()
+    Paths.PATH_TO_LIBRARIES        = Paths.OsRoot() .. "Development/static/"
+    Paths.PATH_TO_INCLUDES         = Paths.OsRoot() .. "Development/include/"
+    Paths.PATH_TO_STATIC_OUTPUT    = Paths.PATH_TO_LIBRARIES
+    Paths.USING_TRIGON_STANDARD    = true
 end
 
-return module
+return Paths

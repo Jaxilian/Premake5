@@ -1,6 +1,6 @@
-local module = {}
+local Vulkan = {}
 
-function module.Link()
+function Vulkan.Link()
     local vulkan_sdk = os.getenv("VULKAN_SDK")
     if not vulkan_sdk then
         error("VULKAN_SDK environment variable is not set, have you installed Vulkan SDK?")
@@ -18,4 +18,4 @@ end
 
 
 
-return module
+return Vulkan
