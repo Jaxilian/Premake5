@@ -179,7 +179,16 @@ function Project.Link(libName)
     }
 end
 
+function Project.AddDefinition(definition)
+    defines{definition}
+end
+
 function Project.UseModule(name, module_name)
+
+    if not Paths.Exists( name .. "/" .. module_name) then
+        error(module_name .. " does not exists under project " .. name)
+    end
+
     table.insert(Project.Cache[name].Modules, module_name)
 
     files {
@@ -194,17 +203,20 @@ function Project.UseModule(name, module_name)
             name .. "/**.cpp"
         }
     end
-end
 
-
-function Project.AddDefinition(definition)
-    defines{definition}
+    Project.AddDefinition(string.upper(module_name) .."_MODULE")
+    
 end
 
 function Project.End(name)
     if not Project.Cache[name] then
         error(name .. " project has not been started")
         return
+    end
+
+
+    if #Project.Cache[name].Modules <= 0 then
+        error("Project " .. name .. " does not have any modules!")
     end
 
     set_common(name)
