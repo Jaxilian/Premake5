@@ -1,5 +1,7 @@
 {
-    "files.associations": {
-        "string.h": "c"
-    }
+    "files.exclude": {
+        "tmp": false,
+        "**/**.lua" :false,
+        "premake" :false
+  }
 }
